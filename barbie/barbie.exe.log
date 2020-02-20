@@ -1,0 +1,5 @@
+Traceback (most recent call last):
+  File "barbie.py", line 32, in ?
+  File "lib\main.pyc", line 306, in main
+  File "lib\main.pyc", line 70, in init
+pygame.error: DirectDraw2::SetCooperativeLevel: Exclusive mode was already set
