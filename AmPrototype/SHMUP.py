@@ -7,6 +7,7 @@
 import pygame
 import random
 from os import path
+import mysql.connector
 
 
 img_dir = path.join(path.dirname(__file__), 'img')
@@ -84,6 +85,8 @@ def button(option, x, y, w, h, ic, ac, correctAnswer):
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
     
+    
+    
     if x + w > mouse[0] > x and y + h > mouse[1] > y:
         pygame.draw.rect(screen,ac, (x,y,w,h))
         
@@ -129,8 +132,25 @@ def gameOver(): #Ram
            
     
 
-def display_question(): #Alee and Ram
-    file1 = open("Questions.txt","r")
+def display_question(): #Ram
+    
+    mydb = mysql.connector.connect(host = "localhost", user = "root", passwd = "root", database = "ram")
+    mycursor = mydb.cursor()
+    mycursor.execute("select * from pygame")
+    resultList = mycursor.fetchall()
+    questionList = resultList[0]
+    
+    question = questionList[1]
+    correctAnswer = questionList[2]
+    option1 = correctAnswer  
+    option2 = str(random.randrange(1, 15, 2)) #Created a random number begining with 1 (including), ending with 15 (excluding)
+                                                # in 2 steps
+    option3 = str(random.randrange(2, 18, 4)) 
+    
+    
+    """
+    
+    file1 = open("Questions.txt","r") #Alee and Ram
     a = file1.readline()
     
     cols = a.split(",")
@@ -141,6 +161,8 @@ def display_question(): #Alee and Ram
     option3 = cols[4]
     
     file1.close()
+    
+    """
     green = (0, 255, 0) 
    
     
