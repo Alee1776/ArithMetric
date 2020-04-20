@@ -82,6 +82,7 @@ def text_objects(text, font):
 #ic = inactuve color
 #ac = active color
 def button(option, x, y, w, h, ic, ac, correctAnswer): 
+    global Question
     mouse = pygame.mouse.get_pos()
     click = pygame.mouse.get_pressed()
     
@@ -101,6 +102,9 @@ def button(option, x, y, w, h, ic, ac, correctAnswer):
                 screen.blit(text, textRect)
                 
                 
+               
+                Question = False
+              
             
             else:
                 gameOver()
@@ -120,6 +124,26 @@ def gameOver(): #Ram
     screen.blit(background, background_rect)
     draw_text(screen, "Arithmetric!", 64, WIDTH / 2, HEIGHT / 5)
     draw_text(screen, "Wrong Answer! You Died!", 40, WIDTH / 2, HEIGHT / 3)
+    draw_text(screen, "Score: " +str(score), 40, WIDTH / 2, HEIGHT / 2)
+    
+    
+    
+    pygame.display.flip()
+    waiting = True
+    while waiting:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+
+
+def finalGameOver(): #Ram
+    screen.blit(background, background_rect)
+    draw_text(screen, "Life limit Exceeded", 64, WIDTH / 2, HEIGHT / 5)
+    draw_text(screen, "You Died!", 40, WIDTH / 2, HEIGHT / 3)
+    draw_text(screen, "Score: " +str(score), 40, WIDTH / 2, HEIGHT / 2)
+    
     
     
     pygame.display.flip()
@@ -134,35 +158,52 @@ def gameOver(): #Ram
 
 def display_question(): #Ram
     
+   
+    answerIndex = (random.randrange(0, 2, 1)) 
+    option1 = (random.randrange(1, 15, 2)) #Created a random number begining with 1 (including), ending with 15 (excluding)
+                                                # in 2 steps
+    option2 = (random.randrange(2, 18, 4)) 
+    
     mydb = mysql.connector.connect(host = "localhost", user = "root", passwd = "root", database = "ram")
     mycursor = mydb.cursor()
     mycursor.execute("select * from pygame")
     resultList = mycursor.fetchall()
-    questionList = resultList[0]
+    
+    
+    questionLength = len(resultList) -1
+    questionIndex = (random.randrange(0, questionLength, 1)) 
+    
+    questionList = resultList[questionIndex]
+    
     
     question = questionList[1]
     correctAnswer = questionList[2]
-    option1 = correctAnswer  
-    option2 = str(random.randrange(1, 15, 2)) #Created a random number begining with 1 (including), ending with 15 (excluding)
-                                                # in 2 steps
-    option3 = str(random.randrange(2, 18, 4)) 
     
     
-    """
+    option = []
     
-    file1 = open("Questions.txt","r") #Alee and Ram
-    a = file1.readline()
+    if answerIndex == 0:
+        option.append(correctAnswer)
+        option.append(option1)
+        option.append(option2)
     
-    cols = a.split(",")
-    question = cols[0]   #each line is splitted based on a comma and then saved into a list
-    correctAnswer = cols[1]
-    option1 = cols[2]
-    option2 = cols[3]   #accessing each element of the list
-    option3 = cols[4]
+    if answerIndex == 1:
+        option.append(option1)
+        option.append(correctAnswer)
+        option.append(option2)
     
-    file1.close()
+    else:
+        option.append(option1)
+        option.append(option2)
+        option.append(correctAnswer)
+        
     
-    """
+    print(option)
+    
+    
+
+ 
+    
     green = (0, 255, 0) 
    
     
@@ -172,14 +213,16 @@ def display_question(): #Ram
     textRect = text.get_rect()
     textRect.center = (WIDTH //2 , HEIGHT // 5)
     
+    
+    global Question
     Question = True
     while Question:
         screen.fill(WHITE)
         screen.blit(text, textRect)
         
-        button(option1, 170, 350, 130, 30 , green,lightYellow, correctAnswer)
-        button(option2, 170, 430, 130, 30, green, lightYellow, correctAnswer)
-        button(option3, 170, 510, 130, 30 , green,lightYellow, correctAnswer)
+        button(str(option[0]), 170, 350, 130, 30 , green,lightYellow, correctAnswer)
+        button(str(option[1]), 170, 430, 130, 30, green, lightYellow, correctAnswer)
+        button(str(option[2]), 170, 510, 130, 30 , green,lightYellow, correctAnswer)
         
        
        
@@ -188,6 +231,9 @@ def display_question(): #Ram
                 pygame.quit()
                 quit()
             pygame.display.update()
+        
+        
+    
             
             
 
@@ -419,9 +465,13 @@ pygame.mixer.music.load(path.join(snd_dir, 'tgfcoder-FrozenJam-SeamlessLoop.ogg'
 pygame.mixer.music.set_volume(0.4)
 
 pygame.mixer.music.play(loops=-1)
+
+
 # Game loop
 game_over = True
 running = True
+Question = True
+
 while running:
     if game_over:
         show_go_screen()
@@ -476,7 +526,8 @@ while running:
             player.shield = 100
             # display a question
         
-            display_question() #Alee
+            display_question() #Alee and Ram
+            
 
             
 
@@ -494,7 +545,8 @@ while running:
 
     # if the player died and the explosion has finished playing
     if player.lives == 0 and not death_explosion.alive():
-        game_over = True
+         finalGameOver()
+        #game_over = True
 
     # Draw / render
     screen.fill(BLACK)
