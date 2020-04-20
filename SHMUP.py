@@ -7,6 +7,8 @@
 import pygame
 import random
 from os import path
+import mysql.connector
+
 
 img_dir = path.join(path.dirname(__file__), 'img')
 snd_dir = path.join(path.dirname(__file__), 'snd')
@@ -23,12 +25,17 @@ RED = (255, 0, 0)
 GREEN = (0, 255, 0)
 BLUE = (0, 0, 255)
 YELLOW = (255, 255, 0)
+green = (0, 255, 0) #Alee
+blue = (0, 0, 128) #Alee
+brightGreen = (0,200,0)
+brightRed = (200,0,0)
+lightYellow = (200,200,0)
 
 # initialize pygame and create window
 pygame.init()
 pygame.mixer.init()
 screen = pygame.display.set_mode((WIDTH, HEIGHT))
-pygame.display.set_caption("Shmup!")
+pygame.display.set_caption('ArithMetric') #Alee
 clock = pygame.time.Clock()
 
 font_name = pygame.font.match_font('arial')
@@ -61,6 +68,174 @@ def draw_lives(surf, x, y, lives, img):
         img_rect.x = x + 30 * i
         img_rect.y = y
         surf.blit(img, img_rect)
+
+#Ram
+#Funtction for creating a text to be displayed on the screen       
+def text_objects(text, font):
+    textSurface = font.render(text, True, BLACK)
+    return textSurface, textSurface.get_rect()
+
+
+    
+#Ram
+#Creates a bytton with the x, y co-ordinate, height and width of the rectangle
+#ic = inactuve color
+#ac = active color
+def button(option, x, y, w, h, ic, ac, correctAnswer): 
+    global Question
+    mouse = pygame.mouse.get_pos()
+    click = pygame.mouse.get_pressed()
+    
+    
+    
+    if x + w > mouse[0] > x and y + h > mouse[1] > y:
+        pygame.draw.rect(screen,ac, (x,y,w,h))
+        
+        if click[0] == 1:
+            if option == correctAnswer:
+
+                screen.fill(WHITE)
+                font = pygame.font.SysFont('comicsansms', 25)
+                text = font.render("Congratulations! Correct Answer!", True, green )
+                textRect = text.get_rect()
+                textRect.center = (WIDTH //2 , HEIGHT // 5)
+                screen.blit(text, textRect)
+                
+                
+               
+                Question = False
+              
+            
+            else:
+                gameOver()
+                
+        
+                
+    else:
+        pygame.draw.rect(screen, ic, (x,y,w,h))
+    
+    smallText = pygame.font.Font("freesansbold.ttf", 20)
+    textSurf, textRect = text_objects(option, smallText)
+    textRect.center = ((x+(w/2)), (y+(h/2)))
+    screen.blit(textSurf, textRect)
+
+
+def gameOver(): #Ram
+    screen.blit(background, background_rect)
+    draw_text(screen, "Arithmetric!", 64, WIDTH / 2, HEIGHT / 5)
+    draw_text(screen, "Wrong Answer! You Died!", 40, WIDTH / 2, HEIGHT / 3)
+    draw_text(screen, "Score: " +str(score), 40, WIDTH / 2, HEIGHT / 2)
+    
+    
+    
+    pygame.display.flip()
+    waiting = True
+    while waiting:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+
+
+
+def finalGameOver(): #Ram
+    screen.blit(background, background_rect)
+    draw_text(screen, "Life limit Exceeded", 64, WIDTH / 2, HEIGHT / 5)
+    draw_text(screen, "You Died!", 40, WIDTH / 2, HEIGHT / 3)
+    draw_text(screen, "Score: " +str(score), 40, WIDTH / 2, HEIGHT / 2)
+    
+    
+    
+    pygame.display.flip()
+    waiting = True
+    while waiting:
+        clock.tick(FPS)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                pygame.quit()
+           
+    
+
+def display_question(): #Ram
+    
+   
+    answerIndex = (random.randrange(0, 2, 1)) 
+    option1 = (random.randrange(1, 15, 2)) #Created a random number begining with 1 (including), ending with 15 (excluding)
+                                                # in 2 steps
+    option2 = (random.randrange(2, 18, 4)) 
+    
+    mydb = mysql.connector.connect(host = "localhost", user = "root", passwd = "root", database = "ram")
+    mycursor = mydb.cursor()
+    mycursor.execute("select * from pygame")
+    resultList = mycursor.fetchall()
+    
+    
+    questionLength = len(resultList) -1
+    questionIndex = (random.randrange(0, questionLength, 1)) 
+    
+    questionList = resultList[questionIndex]
+    
+    
+    question = questionList[1]
+    correctAnswer = questionList[2]
+    
+    
+    option = []
+    
+    if answerIndex == 0:
+        option.append(correctAnswer)
+        option.append(option1)
+        option.append(option2)
+    
+    if answerIndex == 1:
+        option.append(option1)
+        option.append(correctAnswer)
+        option.append(option2)
+    
+    else:
+        option.append(option1)
+        option.append(option2)
+        option.append(correctAnswer)
+        
+    
+    print(option)
+    
+    
+
+ 
+    
+    green = (0, 255, 0) 
+   
+    
+    font = pygame.font.SysFont('comicsansms', 64)
+    text = font.render(question, True, BLACK )
+    
+    textRect = text.get_rect()
+    textRect.center = (WIDTH //2 , HEIGHT // 5)
+    
+    
+    global Question
+    Question = True
+    while Question:
+        screen.fill(WHITE)
+        screen.blit(text, textRect)
+        
+        button(str(option[0]), 170, 350, 130, 30 , green,lightYellow, correctAnswer)
+        button(str(option[1]), 170, 430, 130, 30, green, lightYellow, correctAnswer)
+        button(str(option[2]), 170, 510, 130, 30 , green,lightYellow, correctAnswer)
+        
+       
+       
+        for event in pygame.event.get() :
+            if event.type == pygame.QUIT :
+                pygame.quit()
+                quit()
+            pygame.display.update()
+        
+        
+    
+            
+            
 
 class Player(pygame.sprite.Sprite):
     def __init__(self):
@@ -231,9 +406,8 @@ class Explosion(pygame.sprite.Sprite):
 
 def show_go_screen():
     screen.blit(background, background_rect)
-    draw_text(screen, "Game Over!", 64, WIDTH / 2, HEIGHT / 4)
-    draw_text(screen, "Arrow keys move, Space to fire", 22,
-              WIDTH / 2, HEIGHT / 2)
+    draw_text(screen, "Arithmetric!", 64, WIDTH / 2, HEIGHT / 4)
+    draw_text(screen, "Arrow keys move, Space to fire", 22, WIDTH / 2, HEIGHT / 2)
     draw_text(screen, "Press a key to begin", 18, WIDTH / 2, HEIGHT * 3 / 4)
     pygame.display.flip()
     waiting = True
@@ -291,9 +465,13 @@ pygame.mixer.music.load(path.join(snd_dir, 'tgfcoder-FrozenJam-SeamlessLoop.ogg'
 pygame.mixer.music.set_volume(0.4)
 
 pygame.mixer.music.play(loops=-1)
+
+
 # Game loop
 game_over = True
 running = True
+Question = True
+
 while running:
     if game_over:
         show_go_screen()
@@ -346,6 +524,12 @@ while running:
             player.hide()
             player.lives -= 1
             player.shield = 100
+            # display a question
+        
+            display_question() #Alee and Ram
+            
+
+            
 
     # check to see if player hit a powerup
     hits = pygame.sprite.spritecollide(player, powerups, True)
@@ -361,7 +545,8 @@ while running:
 
     # if the player died and the explosion has finished playing
     if player.lives == 0 and not death_explosion.alive():
-        game_over = True
+         finalGameOver()
+        #game_over = True
 
     # Draw / render
     screen.fill(BLACK)
